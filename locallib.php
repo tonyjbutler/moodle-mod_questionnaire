@@ -539,7 +539,7 @@ class questionnaire {
 /// Display Methods
 
     function print_survey($userid=false, $quser) {
-        global $USER, $PAGE, $CFG;
+        global $USER, $PAGE, $CFG, $SESSION;
 
         if (!$userid) {
             $userid = $USER->id;
