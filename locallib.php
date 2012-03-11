@@ -254,6 +254,7 @@ class questionnaire {
                 }
 
                 add_to_log($this->course->id, "questionnaire", "submit", "view.php?id={$this->cm->id}", "{$this->name}", $this->cm->id, $USER->id);
+                unset ($SESSION->questionnaire->skippage);
 
                 $this->response_send_email($this->rid);
                 $this->response_goto_thankyou();
@@ -581,6 +582,92 @@ class questionnaire {
                 $formdata->next = '';
             } else {
                 $formdata->sec++;
+                $lastquestionskiplogic = 0;
+                $max = count( (array) $formdata);
+                $i = 0;
+                $copyformdata = array_reverse((array) $formdata, true);
+                foreach ($copyformdata as $key => $value) {
+                    if ($i == 1) {
+                        $lastquestionqid = $key; // something like q999
+                        $lastquestionid = substr($key, 1); // something like 999
+                        if (strpos($lastquestionid, "_")) { // for radio buttons choices
+                            $lastquestionid =substr($lastquestionid, 0, strpos($lastquestionid, "_"));
+                        }
+                        $choicevalue = $value; // needed for QUESYESNO only 
+                        $lastquestiontypeid = $this->questions["{$lastquestionid}"]->type_id;
+                        // These are the 3 types of questions which accept skiplogic
+                        if ($lastquestiontypeid == QUESYESNO || $lastquestiontypeid == QUESRADIO || $lastquestiontypeid == QUESDROP) {
+                            $lastquestionskiplogic = $this->questions["{$lastquestionid}"]->precise; // we use the "precise" field to store this setting
+                        }            
+                    break;
+                    }
+                    $i++;
+                }
+                $thispage = $formdata->sec;
+                $originalpage = $formdata->sec;
+                while (isset($SESSION->questionnaire->skippage["{$thispage}"]) && $SESSION->questionnaire->skippage["{$thispage}"] == 1) {
+                    $formdata->sec++;
+                    $thispage = $formdata->sec;
+                }
+                if ($lastquestionskiplogic) {
+                    switch ($lastquestiontypeid) {
+                    case QUESYESNO:
+                        switch ($choicevalue) {
+                            case 'y':
+                                $SESSION->questionnaire->skippage["{$originalpage}"] = 0;
+                                $formdata->sec = $originalpage;
+                                break;
+                            case 'n':
+                                $SESSION->questionnaire->skippage["{$originalpage}"] = 1;
+                                $this->response_delete($formdata->rid, $formdata->sec);
+                                $formdata->sec = $originalpage + 1;
+                        } 
+                        break; // end case QUESYESNO
+                    case QUESRADIO:
+                    case QUESDROP:
+                        $choices = $this->questions["{$lastquestionid}"]->choices;
+                        $nbchoices = count ($choices);
+                        // extract the current sequence of pages from $SESSION->questionnaire->skippage
+                        if( isset($SESSION->questionnaire->skippage)) {
+                        $skippages = $SESSION->questionnaire->skippage;
+                        $nc = 0;
+                        foreach ($skippages as $key=> $skippage) {
+                            if ($key >= $originalpage && $nc < $nbchoices) { // a skippage sequence is starting on this page
+                                    $currentskips[] = $skippage;
+                                    $nc++;
+                                }
+                            }
+                        }
+                        // build the sequence of choices from current $choices radio button question
+                        foreach($choices as $key => $value) {
+                            if ($key == $formdata->$lastquestionqid) {
+                                $currentchoices[] = 0;        
+                            } else {
+                                $currentchoices[] = 1;        
+                            }
+                        }
+                        $changedchoices = true;
+                        if (isset($currentskips) && $currentchoices == $currentskips) {
+                            $changedchoices = false;                            
+                        }
+                        if ($changedchoices) {
+                            $thispage = $originalpage;        
+                            $selected = 0;
+                            $i = 0;
+                            foreach($currentchoices as $key => $choice) {
+                                $SESSION->questionnaire->skippage["{$thispage}"] = $choice;
+                                $this->response_delete($formdata->rid, $formdata->sec); // delete previous choice for this question
+                                if ($choice == 0) {
+                                    $selected = $i;
+                                }
+                                $i++;
+                                $thispage++;
+                            }
+                            $formdata->sec = $originalpage + $selected;
+                        }
+                        break; // end case QUESRADIO or QUESDROP
+                    }
+                } // end skiplogic
             }
         }
         if (!empty($formdata->prev) && ($this->navigate)) {
@@ -591,6 +678,16 @@ class questionnaire {
                 $formdata->prev = '';
             } else {
                 $formdata->sec--;
+                // if skippage is set and previous page is set to skip then skip it
+                while ($formdata->sec > 1 ) { // do not go back further than the first page!
+                    $n = $formdata->sec;
+                    if (isset($SESSION->questionnaire->skippage["{$n}"]) && $SESSION->questionnaire->skippage["{$n}"] == 1) {
+                        $formdata->sec--;
+                    } else {
+                        break;
+                    }
+                }
+                
             }
         }
 
@@ -1187,7 +1284,7 @@ class questionnaire {
                 break;
 
             case 8: // Rate
-            	$num = 0;
+                $num = 0;
                 $nbchoices = count($record->choices);
                 $na = get_string('notapplicable', 'questionnaire');
                 foreach ($record->choices as $cid => $choice) {
@@ -1199,7 +1296,7 @@ class questionnaire {
                     } else {
                         $str = 'q'."{$record->id}_$cid";
                         if (isset($formdata->$str) && $formdata->$str == $na) {
-                        	$formdata->$str = -1;
+                            $formdata->$str = -1;
                         }
                         for ($j = 0; $j < $record->length; $j++) {
                             $num += (isset($formdata->$str) && ($j == $formdata->$str));
@@ -1309,7 +1406,7 @@ class questionnaire {
         if ($sec < 1 || !isset($this->questionsbysec[$sec])) {
             return;
         }
-		$vals = $this->response_select($rid, 'content');
+        $vals = $this->response_select($rid, 'content');
         reset($vals);
         foreach ($vals as $id => $arr) {
             if (isset($arr[0]) && is_array($arr[0])) {
@@ -2410,7 +2507,7 @@ class questionnaire {
     Exports the results of a survey to an array.
     */
     function generate_csv($rid='', $userid='', $choicecodes=1, $choicetext=0) {
-	    global $CFG, $SESSION;
+        global $CFG, $SESSION;
         if (isset($SESSION->questionnaire->currentgroupid)) {
             $groupid = $SESSION->questionnaire->currentgroupid;
         } else{
@@ -2653,11 +2750,11 @@ class questionnaire {
             $response = $this->response_select_name($record->id, $choicecodes, $choicetext);
             $qid = $record->id;
             if ($isanonymous) {
-            	// JR :: do not save response date for anonymous respondents
-            	$submitted = '---';
+                // JR :: do not save response date for anonymous respondents
+                $submitted = '---';
             } else {
-            	//JR for better compabitility & readability with Excel
-            	$submitted = date(get_string('strfdateformatcsv', 'questionnaire'), $record->submitted);
+                //JR for better compabitility & readability with Excel
+                $submitted = date(get_string('strfdateformatcsv', 'questionnaire'), $record->submitted);
             }
             $institution = '';
             $department = '';

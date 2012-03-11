@@ -157,8 +157,8 @@ class questionnaire_questions_form extends moodleform {
                 }
                 $rsrc = $CFG->wwwroot.'/mod/questionnaire/images/delete.gif';
 
-    		//Question numbers
-    		 	${$quesgroup}[] =& $mform->createElement('static', 'qnums', '', '<div class="qnums">'.$qnum_txt.'</div>');
+            //Question numbers
+                 ${$quesgroup}[] =& $mform->createElement('static', 'qnums', '', '<div class="qnums">'.$qnum_txt.'</div>');
 
             /// Need to index by 'id' since IE doesn't return assigned 'values' for image inputs.
                 ${$quesgroup}[] =& $mform->createElement('static', 'opentag_'.$question->id, '', '<div class="qicons">');
@@ -170,9 +170,9 @@ class questionnaire_questions_form extends moodleform {
                 ${$quesgroup}[] =& $mform->createElement('image', 'removebutton['.$question->id.']', $rsrc, $rextra);
                 ${$quesgroup}[] =& $mform->createElement('static', 'closetag_'.$question->id, '', '</div>');
             } else {
-            	${$quesgroup}[] =& $mform->createElement('static', 'qnum', '', '<div class="qnums">'.$qnum_txt.'</div>');
-            	if ($this->moveq != $question->id) {
-            	                    $mextra = array('value' => $question->id,
+                ${$quesgroup}[] =& $mform->createElement('static', 'qnum', '', '<div class="qnums">'.$qnum_txt.'</div>');
+                if ($this->moveq != $question->id) {
+                                    $mextra = array('value' => $question->id,
                                 'alt' => get_string('movehere', 'questionnaire'),
                                 'title' => get_string('movehere', 'questionnaire')) + $butclass;
                 $msrc = $CFG->wwwroot.'/mod/questionnaire/images/movehere.gif';
@@ -180,10 +180,10 @@ class questionnaire_questions_form extends moodleform {
                 $newposition = $max == $pos ? 0 : $pos;
                 ${$quesgroup}[] =& $mform->createElement('image', 'moveherebutton['.$newposition.']', $msrc, $mextra);
                 ${$quesgroup}[] =& $mform->createElement('static', 'closetag_'.$question->id, '', '</div>');
-            	}
-            	else {
-            		${$quesgroup}[] =& $mform->createElement('static', 'qnums', '', '<div class="qicons">Move From Here</div>');
-            	}
+                }
+                else {
+                    ${$quesgroup}[] =& $mform->createElement('static', 'qnums', '', '<div class="qicons">Move From Here</div>');
+                }
             }
 
             ${$quesgroup}[] =& $mform->createElement('static', 'qtype_'.$question->id, '', '<div class="qtype">'.$qtype.'</div>');
@@ -201,11 +201,11 @@ class questionnaire_questions_form extends moodleform {
             $qname = $question->name;
             ${$quesgroup}[] =& $mform->createElement('static', 'qname_'.$question->id, '', '<div class="qname">'.$qname.'</div><br />');
             ${$quesgroup}[] =& $mform->createElement('static', 'qcontent_'.$question->id, '', '<div class="qname">'.$content.'</div><br /><hr />');
-            
+
             $mform->addGroup($$quesgroup, 'questgroup', '', '', false);
 
             //$mform->addElement('static', 'qcontent_'.$question->id, '', '<div style=>'.$content.'</div>');
-			
+
             $pos++;
         }
 
@@ -272,8 +272,16 @@ class questionnaire_edit_question_form extends moodleform {
             $deflength = 0;
             $defprecise = 0;
             $lhelpname = 'alignment';
+            $phelpname = 'skiplogic';
+            $plabelname = 'skiplogic';
             $olabelname = 'possibleanswers';
             $ohelpname = 'radioanswers';
+            break;
+        case QUESYESNO:
+            $deflength = 0;
+            $defprecise = 0;
+            $phelpname = 'skiplogic';
+            $plabelname = 'skiplogic';
             break;
         case QUESRATE:
             $deflength = 5;
@@ -294,6 +302,7 @@ class questionnaire_edit_question_form extends moodleform {
             $defprecise = 0;
             $olabelname = 'possibleanswers';
             $ohelpname = 'dropanswers';
+            $phelpname = 'skiplogic';
             break;
         default:
             $deflength = 0;
@@ -345,8 +354,8 @@ class questionnaire_edit_question_form extends moodleform {
         }
 
         /// Precision field:
-        if ($question->type_id == QUESYESNO || $question->type_id == QUESDROP || $question->type_id == QUESDATE ||
-            $question->type_id == QUESSECTIONTEXT || $question->type_id == QUESRADIO) {
+        if ($question->type_id == QUESDATE ||
+            $question->type_id == QUESSECTIONTEXT) {
             $mform->addElement('hidden', 'precise', $defprecise);
         } else if ($question->type_id == QUESRATE) {
             $precoptions = array("0" => get_string('normal','questionnaire'),
@@ -355,6 +364,13 @@ class questionnaire_edit_question_form extends moodleform {
                                  "3" => get_string('osgood','questionnaire'));
             $mform->addElement('select', 'precise', get_string($phelpname, 'questionnaire'), $precoptions);
             $mform->setHelpButton('precise', array($phelpname, get_string($lhelpname, 'questionnaire'), 'questionnaire'));
+        } else if ($question->type_id == QUESYESNO || $question->type_id == QUESDROP || $question->type_id == QUESRADIO) {
+            $question->precise = isset($question->precise) ? $question->precise : $defprecise;
+            $skiplogicgroup = array();
+            $skiplogicgroup[] =& $mform->createElement('radio', 'precise', '', $strno, '0');
+            $skiplogicgroup[] =& $mform->createElement('radio', 'precise', '', $stryes, '1');
+            $mform->addGroup($skiplogicgroup, 'skiplogicgroup', get_string($phelpname, 'questionnaire'), ' ', false);
+            $mform->setHelpButton('skiplogicgroup', array($phelpname, get_string($phelpname, 'questionnaire'), 'questionnaire'));
         } else {
             $question->precise = isset($question->precise) ? $question->precise : $defprecise;
             $mform->addElement('text', 'precise', get_string($phelpname, 'questionnaire'), array('size'=>'1'));

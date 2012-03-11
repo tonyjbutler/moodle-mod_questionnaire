@@ -209,6 +209,7 @@ $string['selecttheme'] = 'Select a theme (css) to use with this questionnaire.';
 $string['sendemail'] = 'Sends a copy of each submission to address (or leave blank for no email backup).';
 $string['settings'] = 'Settings';
 $string['settingssaved'] = 'Settings saved';
+$string['skiplogic'] = 'Skip Logic';
 $string['strfdate'] = '%%d/%%m/%%Y';
 $string['strfdateformatcsv'] = 'd/m/Y H:i:s';
 $string['submitoptions'] = 'Submission options';
