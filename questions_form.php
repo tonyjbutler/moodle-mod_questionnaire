@@ -107,6 +107,9 @@ class questionnaire_questions_form extends moodleform {
             }
             // needed for non-English languages JR
             $qtype = '['.questionnaire_get_type($tid).']';
+            if (($tid == QUESYESNO || $tid == QUESRADIO || $tid == QUESDROP) && $question->precise) {
+                $qtype.= ' skip';
+            }
             $content = '';
             if($tid == 99) {
                 $sec++;

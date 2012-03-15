@@ -651,7 +651,7 @@ class questionnaire {
                             $changedchoices = false;                            
                         }
                         if ($changedchoices) {
-                            $thispage = $originalpage;        
+                            $thispage = $originalpage;     
                             $selected = 0;
                             $i = 0;
                             foreach($currentchoices as $key => $choice) {
