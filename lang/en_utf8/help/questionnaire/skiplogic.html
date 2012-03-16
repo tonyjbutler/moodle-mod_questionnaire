@@ -1,0 +1,164 @@
+<style type="text/css">
+<!--
+.red {
+	color: #F00;
+}
+-->
+</style>
+<h2 class="main">Skip Logic &amp; Conditional branching</h2>
+<hr />
+<p>Respondents <em>can</em> be routed through a questionnaire using 2 types of branching logic: </p>
+<h3><strong>1. Skipping specific questions</strong></h3>
+<p>A skip  pattern will jump a respondent over a group of questions that isn't  relevant to them. Use a Yes/No question for this.</p>
+<h4>Example 1</h4>
+<ol>
+  <li>Page 1  
+    <ul>
+      <li>Question 1 Do you own a car? Yes/No. 
+        <ul>
+          <li>Answer Yes -&gt; go to page 2</li>
+          <li>Answer No -&gt; go to page 3 (i.e. <strong><em>skip</em></strong> over irrelevant question(s) in page 2</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+
+  <li>Page 2
+    <ul>
+      <li>Question 2: What is the color of your car?</li>
+      <li>Question 3: What is the make of your car?</li>
+      <li>Question 4: How long have you owned your car?</li>
+    </ul>
+  </li>
+  <li>Page 3
+    <ul>
+      <li>Question 5: Where do you work?</li>
+      <li>etc.</li>
+    </ul>
+  </li>
+</ol>
+<h4>Procedure to be followed to obtain the above &quot;skip logic&quot; flow</h4>
+<ul>
+  <li>Create Q1 as a Yes/No question, and set <strong><em>Skip Logic</em></strong> to &quot;Yes&quot; and set <strong><em>Response Required</em></strong> to <strong>Yes</strong>, of course!</li>
+  <li>Insert a Page Break ---</li>
+  <li>Create Q2 as a radio button or text or dropdown question type</li>
+  <li>Create Q3</li>
+  <li>Create Q4 (you can create as many questions as you like on that page)</li>
+  <li>Insert a Page Break---</li>
+  <li>Now continue creating questions normally, until you want to use Skip Logic again.</li>
+</ul>
+<h3><strong>2. Conditional branching</strong>: 
+</h3>
+<p>A branch pattern will route a  respondent to the appropriate section of the questionnaire: each  respondent follows one of the branches. Use a Radio Button or Dropdown Box question for this.</p>
+<h4>Example 2</h4>
+<ol>
+  <li>Page 1
+    <ul>
+      <li>Question 1: Where do you teach? <em>Primary school / Secondary education sector / University</em>.
+<ul>
+          <li>Answer: <em>Primary school</em> -&gt; go to page 2</li>
+          <li>Answer: <em>Secondary education sector </em>-&gt; go to page 3</li>
+          <li>Answer: <em>University</em> -&gt; go to page 4</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Page 2
+    <ul>
+      <li>Question 2: How long have you been a Primary school teacher?</li>
+      <li>Question 3: What age groups to you teach? [go to page 5]</li>
+    </ul>
+  </li>
+  <li>Page 3
+    <ul>
+      <li>Question 4: How long have you been a Secondary school teacher?</li>
+      <li>Question 5: What it your main subject [go to page 5]</li>
+    </ul>
+  </li>
+  <li>Page 4 
+    <ul>
+      <li>Question 6: How long have you been a University professor?</li>
+      <li>Question 7: What is your domain of research? [go to page 5]</li>
+    </ul>
+  </li>
+  <li>Page 5
+    <ul>
+      <li>Question 8: Tell us what you think of Moodle in your everyday teaching routine...</li>
+      <li>etc.</li>
+    </ul>
+  </li>
+</ol>
+<h4>Procedure to be followed to obtain the above &quot;conditional branching&quot; flow</h4>
+<ul>
+  <li>Create Q1 as a Radio Button or Dropdown Box question, and set skip logic to &quot;Yes&quot; and set <strong><em>Response Required</em></strong> to <strong>Yes</strong>, of course!</li>
+  <li>Insert a Page Break ---</li>
+  <li>Create Q2 as a Text Box or Numeric question</li>
+  <li>Create Q3 as a Text Box question</li>
+  <li>Insert a Page Break ---</li>
+  <li>Create Q4 as a Text Box or Numeric question</li>
+  <li>Create Q5 as a Text Box or Radio Button or Dropdown Box question</li>
+  <li>Insert a Page Break---</li>
+  <li>Create Q6 as a Text Box or Numeric question</li>
+  <li>Create Q7 as a Text Box question</li>
+  <li>Insert a Page Break---</li>
+  <li>Now continue creating questions normally, until you want to use Skip Logic again.</li>
+</ul>
+<h4>Note 1</h4>
+<p>It is <em>not possible</em> to embed skip logic pages <em>within</em> pages which are already part of a skip logic flow. That is to say that the following example flow is not possible in the current version of the Moodle Questionnaire:</p>
+<div class="red">
+  <h4>*Example 3 (<strong>not possible</strong>)</h4>
+<ul>
+  <li>Page 1
+    <ul>
+      <li>Question 1 Do you own a car? Yes/No.
+        <ul>
+          <li>Answer Yes -&gt; go to page 2</li>
+          <li>Answer No -&gt; <strong>go to page 5</strong></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  <li>Page 2
+    <ul>
+      <li>Question 2: Did you buy your car new? Yes/No.</li>
+      <li>Answer Yes -&gt; go to page 3</li>
+      <li>Answer No -&gt; go to page 4</li></ul>
+  </li>
+  <li>Page 3
+    <ul>
+      <li>Question 5: What is the make of your car?</li>
+    </ul>
+  </li>
+  <li> Page 4
+  <ul>
+    <li>Question 6: What is the color of your car?</li>
+  </ul>
+  </li>
+  <li>Page 5
+  <ul>
+    <li>Where do you work?</li>
+  </ul>
+  </li>
+</ul>
+</div>
+<h4>Note 2</h4>
+<p>A respondent can walk a questionnaire which contains one (or more) skip logic pages forward <em>and backward</em>, as any &quot;normal&quot; multi-pages questionnaire. This means that any answer can be changed at any time (until the <strong><em>Submit</em></strong> button is pressed on the final page). This means that changing skip logic answers will have some implications, as shown in the example below. The same would apply to &quot;conditional branching&quot; questions, of course.</p>
+<p>Example walk-through with Example 1 above.</p>
+<ol>
+  <li>Page 1 Question 1 Do you own a car? Yes/No. Answer: <em><strong>Yes</strong></em>      </li>
+  <li>Page 2 Question 2: What is the color of your car? Answer: <strong><em>Blue</em></strong>
+    <ul>
+      <li>Question 3: What is the make of your car? Answer:<strong><em> Rolls-Royce</em></strong><em></em></li>
+      <li>Question 4: How long have you owned your car? Answer: <strong><em>20 years</em></strong><em></em></li>
+    </ul>
+  </li>
+  <li>Page 3 Where do you work? Answer: <strong><em>I work from home</em></strong>. </li>
+  <li>Previous page -&gt; Page 2</li>
+  <li>Previous page -&gt; Page 1; Do you own a car? Yes/No. Answer: <em><strong>Yes</strong></em> change Answer to <strong><em>No</em></strong>.</li>
+  <li>Next page -&gt; Page 3 Question 5: Where do you work? Answer: <strong><em>I work from home</em></strong>. </li>
+</ol>
+<p>In step 5, respondent changed his previous <strong><em>Yes</em></strong> answer to <strong><em>No</em></strong>, so page 2 with its questions 2 to 4 is <em>skipped over</em> and <em>any previously-entered responses to those questions are deleted</em> (from the Moodle site's database).</p>
+<hr />
+<p style="font-size:smaller; text-align:center">Updated by JR on 
+  <!-- #BeginDate format:En2 -->06-Jan-2010<!-- #EndDate -->
+</p>
