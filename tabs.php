@@ -77,22 +77,25 @@
         $row[] = new tabobject('allreport', $CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.
                                $argstr.'&action=vall'), get_string('viewresponses', 'questionnaire', $numresp));
         if (in_array($current_tab, array('vall', 'vresp', 'valldefault', 'vallasort', 'vallarsort', 'deleteall', 'downloadcsv',
-                                         'vrespsummary', 'printresp', 'deleteresp'))) {    
+                                         'vrespsummary', 'vrespsummarylist', 'printresp', 'deleteresp'))) {    
         $inactive[] = 'allreport';
             $activated[] = 'allreport';
             $row2 = array();
             $argstr2 = $argstr.'&action=vall';
             $row2[] = new tabobject('vall', $CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.$argstr2),
                                     get_string('viewallresponses', 'questionnaire'));
-            $argstr2 = $argstr.'&byresponse=1&action=vresp';
             if ($questionnaire->capabilities->viewsingleresponse) {
-                    $argstr2 = $argstr.'&byresponse=1&action=vresp';
+                    $argstr2 = $argstr.'&byresponse=1&action=vresp&currentgroupid='.$currentgroupid;
+                    //devjr no need to display single responses if questionnaire is anonymous
+                    if ($questionnaire->respondenttype != 'anonymous') {
                     $row2[] = new tabobject('vresp', $CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.$argstr2),
                                             get_string('viewbyresponse', 'questionnaire'));
+                    } else {
+	                    $row2[] = new tabobject('');
+					}
              }
         }
         if (in_array($current_tab, array('valldefault',  'vallasort', 'vallarsort', 'deleteall', 'downloadcsv'))) {
-            //$inactive[] = 'vall';
            	$activated[] = 'vall';
            	$row3 = array();
            	
@@ -123,11 +126,11 @@
         if (in_array($current_tab, array('vrespsummary', 'printresp', 'deleteresp'))) {
         	$inactive[] = 'vresp';
             $activated[] = 'vresp';
-            $row3 = array();
 
-            $argstr2 = $argstr.'&action=vresp';
-            $row3[] = new tabobject('vrespsummary', $CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.$argstr2),
-                                    get_string('summary', 'questionnaire'));
+            $row3 = array();
+            $argstr2 = $argstr.'&byresponse=1&action=vresp';
+            $row3[] = new tabobject('vrespsummarylist', $CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.$argstr2.'&currentgroupid='.$currentgroupid),
+                                    get_string('respondentslist', 'questionnaire'));
 
             $linkname = get_string('print','questionnaire');
             $title = get_string('printtooltip','questionnaire').'" target="_blank';
@@ -145,6 +148,15 @@
                                         get_string('deleteresp', 'questionnaire'));
             }
         }
+    	
+        if (in_array($current_tab, array('vrespsummarylist'))) {
+        	$inactive[] = 'deleteresp';
+            $activated[] = 'vresp';
+            
+            $row3 = array();
+            $row3[] = new tabobject('vrespsummarylist', '',get_string('respondentslist', 'questionnaire'));
+			$row3[] = new tabobject('deleteresp', '', '');
+		}
     } else if ($questionnaire->capabilities->readallresponses && ($numresp > 0) &&
                ($questionnaire->resp_view == $QUESTIONNAIRE_STUDENTVIEWRESPONSES_ALWAYS ||
                 ($questionnaire->resp_view == $QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED

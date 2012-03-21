@@ -696,7 +696,11 @@
         print_header_simple(get_string('questionnairereport', 'questionnaire'), '', $navigation);
 
         /// print the tabs
+        if ($byresponse) {
+        	$SESSION->questionnaire->current_tab = 'vrespsummarylist';
+        } else {
         $SESSION->questionnaire->current_tab = 'vrespsummary';
+        }
         include('tabs.php');
 
         if (!empty($questionnaire->survey->theme)) {
@@ -711,7 +715,23 @@
     /// Print the main part of the page
 
         echo '<br/><br/>';
-        echo '<div style="text-align:center; padding-bottom:5px;">';
+        $groupid = $currentsessiongroupid;
+		$groupname = '';
+        if ($groupmode > 0) {
+            switch ($currentgroupid) {
+                case -1: // all participants
+                    $groupname = get_string('allparticipants');
+                    break;
+                case -2: // all members of any group
+                    $groupname = get_string('membersofselectedgroup','group').' '.get_string('allgroups');
+                	break;
+                case -3: // not members of any group
+                    $groupname = get_string('groupnonmembers');
+                	break;
+                default: // members of a specific group
+                	$groupname = get_string('membersofselectedgroup','group').' '.get_string('group').' '.$questionnairegroups[$currentgroupid]->name;
+            }
+        }
         if ($groupid === 0) {
             $groupname = '<strong>'.get_string('groupmembersonlyerror','group').'</strong>';;
             echo (get_string('viewbyresponse','questionnaire').'. '.$groupname.'. ');
@@ -719,23 +739,23 @@
             echo (get_string('group').' <strong>'.groups_get_group_name($groupid).'</strong>: '.
                 get_string('noresponses','questionnaire'));
         } else {
-            if ($groupid != -1 ) {
-                $questionnaire->survey_results_navbar_student ($rid, $resp->username, $instance, $resps, 'report', $sid);
-            } else {
-                $questionnaire->survey_results_navbar($rid);
-            }
+			// devjr no need to display names list if questionnaire is anonymous!
+			if ($questionnaire->respondenttype != 'anonymous') {
+				helpbutton('viewbyresponse', get_string('viewbyresponse', 'questionnaire'), 'questionnaire', true, false);
+		        echo (get_string('viewbyresponse','questionnaire').' <strong> : '.$groupname.'</strong>');
+				if ($byresponse) { // show list of respondents
+			        $questionnaire->survey_results_navbar_alpha($rid, $groupid, $cm, $byresponse);
+				} else { // display individual responses
+			        echo'<div class = "viewbyresponsenavbar">';
+			        $questionnaire->survey_results_navbar_alpha($rid, $groupid, $cm, $byresponse);
             echo '</div>';
             echo'<div class = "active">';
             $ret = $questionnaire->view_response($rid);
             echo '</div>';
-            echo '<div style="text-align:center; padding-bottom:5px;">';
-            if ($groupid != -1 ) {
-                $questionnaire->survey_results_navbar_student ($rid, $userid, $instance, $resps, 'report', $sid);
-            } else {
-                $questionnaire->survey_results_navbar($rid);
+				}
+
             }
         }
-        echo '</div>';
 
     /// Finish the page
         print_footer($course);
