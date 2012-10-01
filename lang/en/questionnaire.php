@@ -393,6 +393,7 @@ $string['viewbyresponse'] = 'List of responses';
 $string['viewindividualresponse'] = 'View Individual Responses';
 $string['viewindividualresponse_help'] = 'Click on the respondents\' names in the list below to view their individual responses.';
 $string['viewresponses'] = 'All responses ({$a})';
+$string['viewuserprofile'] = 'View {$a}\'s profile';
 $string['viewyourresponses'] = 'Your responses- view {$a}';
 $string['warning'] = 'Warning, error encountered.';
 $string['wrongdateformat'] = 'The date entered: <strong>{$a}</strong> does not correspond to the format shown in the example.';

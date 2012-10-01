@@ -755,7 +755,9 @@ class questionnaire {
         if ($resp && !$blankquestionnaire) {
             if ($userid) {
                 if ($user = $DB->get_record('user', array('id' => $userid))) {
-                    $ruser = fullname($user);
+                    // print link to respondent's profile page
+                    $ruser = '<a href="/user/view.php?id='.$resp->username.'" title="'.
+                            get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
                 }
             }
             if ($this->respondenttype == 'anonymous') {
