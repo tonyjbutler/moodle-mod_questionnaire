@@ -352,6 +352,7 @@ If the setting is **Group Mode**: *Separate groups*, then users who do not have 
 $string['viewallresponses_link'] = 'Viewing_Questionnaire_responses#Group_filtering';
 $string['viewbyresponse'] = 'View By Response';
 $string['viewresponses'] = 'All responses ({$a})';
+$string['viewuserprofile'] = 'View {$a}\'s profile';
 $string['viewyourresponses'] = 'Your responses- view {$a}';
 $string['warning'] = 'Warning, error encountered.';
 $string['wrongdateformat'] = 'The date entered: <strong>{$a}</strong> does not correspond to the format shown in the example.';
