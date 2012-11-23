@@ -795,7 +795,7 @@ class questionnaire {
             if ($userid) {
                 if ($user = $DB->get_record('user', array('id' => $userid))) {
                     // print link to respondent's profile page
-                    $ruser = '<a href="/user/view.php?id='.$resp->username.'" title="'.
+                    $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$courseid.'" title="'.
                             get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
                 }
             }
