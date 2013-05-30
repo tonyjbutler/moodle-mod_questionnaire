@@ -765,8 +765,13 @@ class questionnaire {
                         if ($record = $DB->get_record_sql($sql, array($rid))) {
                             $usercourseid = $record->course;
                         }
+                        // also get user's department if possible
+                        $userdept = '';
+                        if ($user->department) {
+                            $userdept = '<br />'.get_string('department').': '.$user->department;
+                        }
                         $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$usercourseid.'" title="'.
-                                get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
+                                get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>'.$userdept;
                     } else {
                         $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$courseid.'" title="'.
                                 get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
@@ -778,12 +783,12 @@ class questionnaire {
             } else {
                 // JR DEV comment following line out if you do NOT want time submitted displayed in Anonymous surveys.
                 if ($resp->submitted) {
-                    $timesubmitted = '&nbsp;'.get_string('submitted', 'questionnaire').'&nbsp;'.userdate($resp->submitted);
+                    $timesubmitted = '<br />'.get_string('submitted', 'questionnaire').'&nbsp;'.userdate($resp->submitted);
                 }
             }
         }
         if ($ruser) {
-            echo (get_string('respondent', 'questionnaire').': <strong>'.$ruser.'</strong>');
+            echo (get_string('respondent', 'questionnaire').': '.$ruser);
             if ($this->survey->realm == 'public') {
                 // For a public questionnaire, look for the course that used it.
                 $coursename = '';
@@ -793,7 +798,7 @@ class questionnaire {
                 if ($record = $DB->get_record_sql($sql, array($rid))) {
                     $coursename = $record->fullname;
                 }
-                echo (' '.get_string('course'). ': '.$coursename);
+                echo ('<br />'.get_string('course'). ': '.$coursename);
             }
             echo ($groupname);
             echo ($timesubmitted);
