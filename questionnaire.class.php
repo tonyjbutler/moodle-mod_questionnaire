@@ -756,8 +756,21 @@ class questionnaire {
             if ($userid) {
                 if ($user = $DB->get_record('user', array('id' => $userid))) {
                     // print link to respondent's profile page
-                    $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$courseid.'" title="'.
-                            get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
+                    if ($this->survey->realm == 'public') {
+                        // For a public questionnaire, look for the course that used it.
+                        $usercourseid = '';
+                        $sql = 'SELECT q.id, q.course, c.fullname '.
+                               'FROM {questionnaire} q, {questionnaire_attempts} qa, {course} c '.
+                               'WHERE qa.rid = ? AND q.id = qa.qid AND c.id = q.course';
+                        if ($record = $DB->get_record_sql($sql, array($rid))) {
+                            $usercourseid = $record->course;
+                        }
+                        $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$usercourseid.'" title="'.
+                                get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
+                    } else {
+                        $ruser = '<a href="/user/view.php?id='.$resp->username.'&course='.$courseid.'" title="'.
+                                get_string('viewuserprofile', 'questionnaire', fullname($user)).'">'.fullname($user).'</a>';
+                    }
                 }
             }
             if ($this->respondenttype == 'anonymous') {
