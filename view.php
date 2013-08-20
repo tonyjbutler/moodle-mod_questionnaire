@@ -55,7 +55,7 @@ if ($id) {
 
 // Check login and get context.
 require_login($course, true, $cm); // require user to login for front page questionnaire
-$context = get_context_instance(CONTEXT_MODULE, $cm->id);
+$context = context_module::instance($cm->id);
 
 $url = new moodle_url($CFG->wwwroot.'/mod/questionnaire/view.php');
 if (isset($id)) {
@@ -137,7 +137,7 @@ if (!$questionnaire->questions) {
 }
 if ($questionnaire->capabilities->editquestions && !$questionnaire->questions) { // Sanity check.
     echo '<a href="'.$CFG->wwwroot.htmlspecialchars('/mod/questionnaire/questions.php?'.
-                'id='.$questionnaire->cm->id).'">'.'<strong>'.get_string('questions', 'questionnaire').'</strong></a>';
+                'id='.$questionnaire->cm->id).'">'.'<strong>'.get_string('addquestions', 'questionnaire').'</strong></a>';
 }
 echo $OUTPUT->box_end();
 if (isguestuser()) {

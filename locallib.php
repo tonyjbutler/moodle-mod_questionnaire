@@ -49,24 +49,24 @@ define('QUESTIONNAIRE_MAX_EVENT_LENGTH', 5*24*60*60);   // 5 days maximum.
 
 define('QUESTIONNAIRE_DEFAULT_PAGE_COUNT', 20);
 
-global $questionnaire_types;
-$questionnaire_types = array (QUESTIONNAIREUNLIMITED => get_string('qtypeunlimited', 'questionnaire'),
+global $questionnairetypes;
+$questionnairetypes = array (QUESTIONNAIREUNLIMITED => get_string('qtypeunlimited', 'questionnaire'),
                               QUESTIONNAIREONCE => get_string('qtypeonce', 'questionnaire'),
                               QUESTIONNAIREDAILY => get_string('qtypedaily', 'questionnaire'),
                               QUESTIONNAIREWEEKLY => get_string('qtypeweekly', 'questionnaire'),
                               QUESTIONNAIREMONTHLY => get_string('qtypemonthly', 'questionnaire'));
 
-global $questionnaire_respondents;
-$questionnaire_respondents = array ('fullname' => get_string('respondenttypefullname', 'questionnaire'),
+global $questionnairerespondents;
+$questionnairerespondents = array ('fullname' => get_string('respondenttypefullname', 'questionnaire'),
                                     'anonymous' => get_string('respondenttypeanonymous', 'questionnaire'));
 
-global $questionnaire_realms;
-$questionnaire_realms = array ('private' => get_string('private', 'questionnaire'),
+global $questionnairerealms;
+$questionnairerealms = array ('private' => get_string('private', 'questionnaire'),
                                'public' => get_string('public', 'questionnaire'),
                                'template' => get_string('template', 'questionnaire'));
 
-global $questionnaire_responseviewers;
-$questionnaire_responseviewers =
+global $questionnaireresponseviewers;
+$questionnaireresponseviewers =
     array ( QUESTIONNAIRE_STUDENTVIEWRESPONSES_NEVER => get_string('responseviewstudentsnever', 'questionnaire'),
             QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED => get_string('responseviewstudentswhenanswered', 'questionnaire'),
             QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED => get_string('responseviewstudentswhenclosed', 'questionnaire'),
@@ -75,84 +75,84 @@ $questionnaire_responseviewers =
 function questionnaire_check_date ($thisdate, $insert=false) {
     $dateformat = get_string('strfdate', 'questionnaire');
     if (preg_match('/(%[mdyY])(.+)(%[mdyY])(.+)(%[mdyY])/', $dateformat, $matches)) {
-        $date_pieces = explode($matches[2], $thisdate);
-        foreach ($date_pieces as $datepiece) {
+        $datepieces = explode($matches[2], $thisdate);
+        foreach ($datepieces as $datepiece) {
             if (!is_numeric($datepiece)) {
                 return 'wrongdateformat';
             }
         }
         $pattern = "/[^dmy]/i";
         $dateorder = strtolower(preg_replace($pattern, '', $dateformat));
-        $countpieces = count($date_pieces);
+        $countpieces = count($datepieces);
         if ($countpieces == 1) { // Assume only year entered.
             switch ($dateorder) {
                 case 'dmy': // Most countries.
                 case 'mdy': // USA.
-                    $date_pieces[2] = $date_pieces[0]; // year
-                    $date_pieces[0] = '1'; // Assumed 1st month of year.
-                    $date_pieces[1] = '1'; // Assumed 1st day of month.
+                    $datepieces[2] = $datepieces[0]; // year
+                    $datepieces[0] = '1'; // Assumed 1st month of year.
+                    $datepieces[1] = '1'; // Assumed 1st day of month.
                     break;
                 case 'ymd': // ISO 8601 standard
-                    $date_pieces[1] = '1'; // Assumed 1st month of year.
-                    $date_pieces[2] = '1'; // Assumed 1st day of month.
+                    $datepieces[1] = '1'; // Assumed 1st month of year.
+                    $datepieces[2] = '1'; // Assumed 1st day of month.
                     break;
             }
         }
         if ($countpieces == 2) { // Assume only month and year entered.
             switch ($dateorder) {
                 case 'dmy': // Most countries.
-                    $date_pieces[2] = $date_pieces[1]; // Year.
-                    $date_pieces[1] = $date_pieces[0]; // Month.
-                    $date_pieces[0] = '1'; // Assumed 1st day of month.
+                    $datepieces[2] = $datepieces[1]; // Year.
+                    $datepieces[1] = $datepieces[0]; // Month.
+                    $datepieces[0] = '1'; // Assumed 1st day of month.
                     break;
                 case 'mdy': // USA
-                    $date_pieces[2] = $date_pieces[1]; // Year.
-                    $date_pieces[0] = $date_pieces[0]; // Month.
-                    $date_pieces[1] = '1'; // Assumed 1st day of month.
+                    $datepieces[2] = $datepieces[1]; // Year.
+                    $datepieces[0] = $datepieces[0]; // Month.
+                    $datepieces[1] = '1'; // Assumed 1st day of month.
                     break;
                 case 'ymd': // ISO 8601 standard
-                    $date_pieces[2] = '1'; // Assumed 1st day of month.
+                    $datepieces[2] = '1'; // Assumed 1st day of month.
                     break;
             }
         }
-        if (count($date_pieces) > 1) {
+        if (count($datepieces) > 1) {
             if ($matches[1] == '%m') {
-                $month = $date_pieces[0];
+                $month = $datepieces[0];
             }
             if ($matches[1] == '%d') {
-                $day = $date_pieces[0];
+                $day = $datepieces[0];
             }
             if ($matches[1] == '%y') {
-                $year = strftime('%C').$date_pieces[0];
+                $year = strftime('%C').$datepieces[0];
             }
             if ($matches[1] == '%Y') {
-                $year = $date_pieces[0];
+                $year = $datepieces[0];
             }
 
             if ($matches[3] == '%m') {
-                $month = $date_pieces[1];
+                $month = $datepieces[1];
             }
             if ($matches[3] == '%d') {
-                $day = $date_pieces[1];
+                $day = $datepieces[1];
             }
             if ($matches[3] == '%y') {
-                $year = strftime('%C').$date_pieces[1];
+                $year = strftime('%C').$datepieces[1];
             }
             if ($matches[3] == '%Y') {
-                $year = $date_pieces[1];
+                $year = $datepieces[1];
             }
 
             if ($matches[5] == '%m') {
-                $month = $date_pieces[2];
+                $month = $datepieces[2];
             }
             if ($matches[5] == '%d') {
-                $day = $date_pieces[2];
+                $day = $datepieces[2];
             }
             if ($matches[5] == '%y') {
-                $year = strftime('%C').$date_pieces[2];
+                $year = strftime('%C').$datepieces[2];
             }
             if ($matches[5] == '%Y') {
-                $year = $date_pieces[2];
+                $year = $datepieces[2];
             }
 
             $month = min(12, $month);
@@ -185,7 +185,7 @@ function questionnaire_check_date ($thisdate, $insert=false) {
 // A variant of Moodle's notify function, with a different formatting.
 function questionnaire_notify($message) {
     $message = clean_text($message);
-    $errorstart = '<div class="message">';
+    $errorstart = '<div class="notifyproblem">';
     $errorend = '</div>';
     $output = $errorstart.$message.$errorend;
     echo $output;
@@ -318,7 +318,7 @@ function questionnaire_get_context($cmid) {
         return $context;
     }
 
-    if (!$context = get_context_instance(CONTEXT_MODULE, $cmid)) {
+    if (!$context = context_module::instance($cmid)) {
             print_error('badcontext');
     }
     return $context;
@@ -606,7 +606,7 @@ function questionnaire_get_incomplete_users($cm, $sid,
 
     global $DB;
 
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context = context_module::instance($cm->id);
 
     // First get all users who can complete this questionnaire.
     $cap = 'mod/questionnaire:submit';
@@ -671,4 +671,318 @@ function questionnaire_get_editor_options($context) {
                     'noclean' => 0,
                     'trusttext'=>0
     );
+}
+
+// Skip logic: we need to find out how many questions will actually be displayed on next page/section.
+function questionnaire_nb_questions_on_page ($questionsinquestionnaire, $questionsinsection, $rid) {
+    global $DB;
+    $questionstodisplay = array();
+    foreach ($questionsinsection as $question) {
+        if ($question->dependquestion != 0) {
+            switch ($questionsinquestionnaire[$question->dependquestion]->type_id) {
+                case QUESYESNO:
+                    if ($question->dependchoice == 0) {
+                        $questiondependchoice = "'y'";
+                    } else {
+                        $questiondependchoice = "'n'";
+                    }
+                    $responsetable = 'response_bool';
+                    break;
+                default:
+                    $questiondependchoice = $question->dependchoice;
+                    $responsetable = 'resp_single';
+            }
+            $sql = 'SELECT * FROM {questionnaire}_'.$responsetable.' WHERE response_id = '.$rid.
+            ' AND question_id = '.$question->dependquestion.' AND choice_id = '.$questiondependchoice;
+            if ($DB->get_record_sql($sql)) {
+                $questionstodisplay [] = $question->id;
+            }
+        } else {
+            $questionstodisplay [] = $question->id;
+        }
+    }
+    return $questionstodisplay;
+}
+
+function questionnaire_get_dependencies($questions, $position) {
+    $dependencies = array();
+    $dependencies[''][0] = get_string('choosedots');
+
+    foreach ($questions as $question) {
+        if (($question->type_id == QUESRADIO || $question->type_id == QUESDROP || $question->type_id == QUESYESNO)
+                        && $question->position < $position) {
+            if (($question->type_id == QUESRADIO || $question->type_id == QUESDROP) && $question->name != '') {
+                foreach ($question->choices as $key => $choice) {
+                    $contents = questionnaire_choice_values($choice->content);
+                    if ($contents->modname) {
+                        $choice->content = $contents->modname;
+                    } else if ($contents->title) { // Must be an image; use its title for the dropdown list.
+                        $choice->content = $contents->title;
+                    } else {
+                        $choice->content = $contents->text;
+                    }
+                    $dependencies[$question->name][$question->id.','.$key] = $question->name.'->'.$choice->content;
+                }
+            }
+            if ($question->type_id == QUESYESNO && $question->name != '') {
+                $dependencies[$question->name][$question->id.',0'] = $question->name.'->'.get_string('yes');
+                $dependencies[$question->name][$question->id.',1'] = $question->name.'->'.get_string('no');
+            }
+        }
+    }
+    return $dependencies;
+}
+
+// Get the parent of a child question.
+function questionnaire_get_parent ($question) {
+    global $DB;
+    $qid = $question->id;
+    $parent = array();
+    $dependquestion = $DB->get_record('questionnaire_question', array('id' => $question->dependquestion),
+                    $fields='id,position,name,type_id');
+    if (is_object($dependquestion)) {
+        $qdependchoice = '';
+        switch ($dependquestion->type_id) {
+            case QUESRADIO:
+            case QUESDROP:
+                $dependchoice = $DB->get_record('questionnaire_quest_choice', array('id' => $question->dependchoice),
+                    $fields='id,content');
+                $qdependchoice = $dependchoice->id;
+                $dependchoice = $dependchoice->content;
+
+                $contents = questionnaire_choice_values($dependchoice);
+                if ($contents->modname) {
+                    $dependchoice = $contents->modname;
+                }
+                break;
+            case QUESYESNO:
+                switch ($question->dependchoice) {
+                    case 0:
+                        $dependchoice = get_string('yes');
+                        $qdependchoice = 'y';
+                        break;
+                    case 1:
+                        $dependchoice = get_string('no');
+                        $qdependchoice = 'n';
+                        break;
+                }
+                break;
+        }
+        // Qdependquestion, parenttype and qdependchoice fields to be used in preview mode.
+        $parent [$qid]['qdependquestion'] = 'q'.$dependquestion->id;
+        $parent [$qid]['qdependchoice'] = $qdependchoice;
+        $parent [$qid]['parenttype'] = $dependquestion->type_id;
+        // Other fields to be used in Questions edit mode.
+        $parent [$qid]['position'] = $question->position;
+        $parent [$qid]['name'] = $question->name;
+        $parent [$qid]['content'] = $question->content;
+        $parent [$qid]['parentposition'] = $dependquestion->position;
+        $parent [$qid]['parent'] = $dependquestion->name.'->'.$dependchoice;
+    }
+    return $parent;
+}
+
+// Get parent position of all child questions in current questionnaire.
+function questionnaire_get_parent_positions ($questions) {
+    global $DB;
+    $parentpositions = array();
+    foreach ($questions as $question) {
+        $dependquestion = $question->dependquestion;
+        if ($dependquestion != 0) {
+            $childid = $question->id;
+            $parentpos = $questions[$dependquestion]->position;
+            $parentpositions[$childid] = $parentpos;
+        }
+    }
+    return $parentpositions;
+}
+
+// Get child position of all parent questions in current questionnaire.
+function questionnaire_get_child_positions ($questions) {
+    global $DB;
+    $childpositions = array();
+    foreach ($questions as $question) {
+        $dependquestion = $question->dependquestion;
+        if ($dependquestion != 0) {
+            $parentid = $questions[$dependquestion]->id;
+            if (!isset($firstchildfound[$parentid])) {
+                $firstchildfound[$parentid] = true;
+                $childpos = $question->position;
+                $childpositions[$parentid] = $childpos;
+            }
+        }
+    }
+    return $childpositions;
+}
+
+// Check if current questionnaire contains child questions.
+function questionnaire_has_dependencies($questions) {
+    foreach ($questions as $question) {
+        if ($question->dependquestion != 0) {
+            return true;
+            break;
+        }
+    }
+    return false;
+}
+
+// Check that the needed page breaks are present to separate child questions.
+function questionnaire_check_page_breaks($questionnaire) {
+    global $DB;
+    $msg = '';
+    // Store the new page breaks ids.
+    $newpbids = array();
+    $delpb = 0;
+    $sid = $questionnaire->survey->id;
+    $questions = $DB->get_records('questionnaire_question', array('survey_id' => $sid, 'deleted' => 'n'), 'id');
+    $positions = array();
+    foreach ($questions as $key => $qu) {
+        $positions[$qu->position]['question_id'] = $key;
+        $positions[$qu->position]['dependquestion'] = $qu->dependquestion;
+        $positions[$qu->position]['dependchoice'] = $qu->dependchoice;
+        $positions[$qu->position]['type_id'] = $qu->type_id;
+        $positions[$qu->position]['qname'] = $qu->name;
+        $positions[$qu->position]['qpos'] = $qu->position;
+    }
+    $count = count($positions);
+
+    for ($i=$count; $i > 0; $i--) {
+        $qu = $positions[$i];
+        $questionnb = $i;
+        if ($qu['type_id'] == QUESPAGEBREAK) {
+            $questionnb--;
+            // If more than one consecutive page breaks, remove extra one(s).
+            $prevqu = null;
+            $prevtypeid = null;
+            if ($i > 1) {
+                $prevqu = $positions[$i-1];
+                $prevtypeid = $prevqu['type_id'];
+            }
+            // If $i == $count then remove that extra page break in last position.
+            if ($prevtypeid == QUESPAGEBREAK || $i == $count || $qu['qpos'] == 1) {
+                $qid = $qu['question_id'];
+                $delpb ++;
+                $msg .= get_string("checkbreaksremoved", "questionnaire", $delpb).'<br />';
+                // Need to reload questions.
+                $questions = $DB->get_records('questionnaire_question', array('survey_id' => $sid, 'deleted' => 'n'), 'id');
+                $DB->set_field('questionnaire_question', 'deleted', 'y', array('id' => $qid, 'survey_id' => $sid));
+                $select = 'survey_id = '.$sid.' AND deleted = \'n\' AND position > '.
+                                $questions[$qid]->position;
+                if ($records = $DB->get_records_select('questionnaire_question', $select, null, 'position ASC')) {
+                    foreach ($records as $record) {
+                        $DB->set_field('questionnaire_question', 'position', $record->position-1, array('id' => $record->id));
+                    }
+                }
+            }
+        }
+        // Add pagebreak between question child and not dependent question that follows.
+        if ($qu['type_id'] != QUESPAGEBREAK) {
+            $qname = $positions[$i]['qname'];
+            $j = $i-1;
+            if ($j != 0) {
+                $prevtypeid = $positions[$j]['type_id'];
+                $prevdependquestion = $positions[$j]['dependquestion'];
+                $prevdependchoice = $positions[$j]['dependchoice'];
+                $prevdependquestionname = $positions[$j]['qname'];
+                $prevqname = $positions[$j]['qname'];
+                if (($prevtypeid != QUESPAGEBREAK && ($prevdependquestion != $qu['dependquestion']
+                                || $prevdependchoice != $qu['dependchoice']))
+                                || ($qu['dependquestion'] == 0 && $prevdependquestion != 0)) {
+                    $sql = 'SELECT MAX(position) as maxpos FROM {questionnaire_question} '.
+                                    'WHERE survey_id = '.$questionnaire->survey->id.' AND deleted = \'n\'';
+                    if ($record = $DB->get_record_sql($sql)) {
+                        $pos = $record->maxpos + 1;
+                    } else {
+                        $pos = 1;
+                    }
+                    $question = new Object();
+                    $question->survey_id = $questionnaire->survey->id;
+                    $question->type_id = QUESPAGEBREAK;
+                    $question->position = $pos;
+                    $question->content = 'break';
+                    if (!($newqid = $DB->insert_record('questionnaire_question', $question))) {
+                        return(false);
+                    }
+                    $newpbids[] = $newqid;
+                    $movetopos = $i;
+                    $questionnaire = new questionnaire($questionnaire->id, null, $course, $cm);
+                    $questionnaire->move_question($newqid, $movetopos);
+                }
+            }
+        }
+    }
+    if (empty($newpbids) && !$msg) {
+        $msg = get_string('checkbreaksok', 'questionnaire');
+    } else if ($newpbids) {
+        $msg .= get_string('checkbreaksadded', 'questionnaire').'&nbsp;';
+        $newpbids = array_reverse ($newpbids);
+        $questionnaire = new questionnaire($questionnaire->id, null, $course, $cm);
+        foreach ($newpbids as $newpbid) {
+            $msg .= $questionnaire->questions[$newpbid]->position.'&nbsp;';
+        }
+    }
+    return($msg);
+}
+
+// Get all descendants and choices for questions with descendants.
+function questionnaire_get_descendants_and_choices ($questions) {
+    global $DB;
+    $questions = array_reverse($questions, true);
+    $qu = array();
+    foreach ($questions as $question) {
+        if ($question->dependquestion) {
+            $dq = $question->dependquestion;
+            $dc = $question->dependchoice;
+            $qid = $question->id;
+
+            $qu['descendants'][$dq][] = 'qn-'.$qid;
+            if (array_key_exists($qid, $qu['descendants'])) {
+                foreach ($qu['descendants'][$qid] as $q) {
+                    $qu['descendants'][$dq][] = $q;
+                }
+            }
+            $qu['choices'][$dq][$dc][] = 'qn-'.$qid;
+        }
+    }
+    return($qu);
+}
+
+// Get all descendants for a question to be deleted.
+function questionnaire_get_descendants ($questions, $questionid) {
+    global $DB;
+    $questions = array_reverse($questions, true);
+    $qu = array();
+    foreach ($questions as $question) {
+        if ($question->dependquestion) {
+            $dq = $question->dependquestion;
+            $qid = $question->id;
+            $qpos = $question->position;
+            $qu[$dq][] = $qid;
+            if (array_key_exists($qid, $qu)) {
+                foreach ($qu[$qid] as $q) {
+                    $qu[$dq][] = $q;
+                }
+            }
+        }
+    }
+    $descendants = array();
+    if (isset($qu[$questionid])) {
+        foreach ($qu[$questionid] as $descendant) {
+            $childquestion = $questions[$descendant];
+            $descendants += questionnaire_get_parent ($childquestion);
+        }
+        uasort($descendants, 'questionnaire_cmp');
+    }
+    return($descendants);
+}
+
+// Function to sort descendants array in questionnaire_get_descendants function.
+function questionnaire_cmp($a, $b) {
+    if ($a == $b) {
+        return 0;
+    } else if ($a < $b) {
+        return -1;
+    } else {
+        return 1;
+    }
 }

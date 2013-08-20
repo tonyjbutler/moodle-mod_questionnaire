@@ -120,7 +120,13 @@ function questionnaire_add_instance($questionnaire) {
     } else {
         $questionnaire->resume = 0;
     }
-    $questionnaire->navigate = 1; // Not used at all!
+
+    // Field questionnaire->navigate used for branching questionnaires. Starting with version 2.5.5.
+    /* if ($questionnaire->navigate == '1') {
+        $questionnaire->navigate = 1;
+    } else {
+        $questionnaire->navigate = 0;
+    } */
 
     if (!$questionnaire->id = $DB->insert_record("questionnaire", $questionnaire)) {
         return false;
@@ -159,7 +165,13 @@ function questionnaire_update_instance($questionnaire) {
     } else {
         $questionnaire->resume = 0;
     }
-    $questionnaire->navigate = 1;
+
+    // Field questionnaire->navigate used for branching questionnaires. Starting with version 2.5.5.
+    /* if ($questionnaire->navigate == '1') {
+        $questionnaire->navigate = 1;
+    } else {
+        $questionnaire->navigate = 0;
+    } */
 
     // Get existing grade item.
     questionnaire_grade_item_update($questionnaire);
@@ -482,18 +494,10 @@ function questionnaire_extend_settings_navigation(settings_navigation $settings,
     global $PAGE, $DB, $USER, $CFG;
     require_once($CFG->dirroot.'/mod/questionnaire/questionnaire.class.php');
 
-    if (!$context = context_module::instance($PAGE->cm->id, IGNORE_MISSING)) {
-        print_error('badcontext');
-    }
+    $context = $PAGE->cm->context;
     $cmid = $PAGE->cm->id;
-
-    if (! $cm = get_coursemodule_from_id('questionnaire', $cmid)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
-        print_error('coursemisconf');
-    }
+    $cm = $PAGE->cm;
+    $course = $PAGE->course;
 
     if (! $questionnaire = $DB->get_record("questionnaire", array("id" => $cm->instance))) {
         print_error('invalidcoursemodule');
@@ -567,7 +571,7 @@ function questionnaire_extend_settings_navigation(settings_navigation $settings,
         $summary = $myreportnode->add(get_string('summary', 'questionnaire'),
                 new moodle_url('/mod/questionnaire/myreport.php',
                         array('instance' => $questionnaire->id, 'userid' => $USER->id, 'byresponse' => 0, 'action' => 'summary')));
-        $byresponsenode = $myreportnode->add(get_string('responses', 'questionnaire'),
+        $byresponsenode = $myreportnode->add(get_string('viewbyresponse', 'questionnaire'),
                 new moodle_url('/mod/questionnaire/myreport.php',
                         array('instance' => $questionnaire->id, 'userid' => $USER->id, 'byresponse' => 1, 'action' => 'vresp')));
         $allmyresponsesnode = $myreportnode->add(get_string('myresponses', 'questionnaire'),
@@ -721,9 +725,9 @@ function questionnaire_print_overview($courses, &$htmlarray) {
         if (array_key_exists($questionnaire->id, $new) && !empty($new[$questionnaire->id])) {
 
             $cm = get_coursemodule_from_instance('questionnaire', $questionnaire->id);
-            $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+            $context = context_module::instance($cm->id);
             $qobject = new questionnaire($questionnaire->id, $questionnaire, $questionnaire->course, $cm);
-            $is_closed = $qobject->is_closed();
+            $isclosed = $qobject->is_closed();
             $answered =  !$qobject->user_can_take($USER->id);
             $count = $new[$questionnaire->id]->count;
 
@@ -731,7 +735,7 @@ function questionnaire_print_overview($courses, &$htmlarray) {
                 (has_capability('mod/questionnaire:readallresponseanytime', $context) ||
                 (has_capability('mod/questionnaire:readallresponses', $context) && (
                     $questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_ALWAYS ||
-                    ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED && $is_closed) ||
+                    ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED && $isclosed) ||
                     ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED  && $answered)
                 )))) {
 
@@ -769,7 +773,7 @@ function questionnaire_print_overview($courses, &$htmlarray) {
  */
 function questionnaire_reset_course_form_definition($mform) {
     $mform->addElement('header', 'questionnaireheader', get_string('modulenameplural', 'questionnaire'));
-    $mform->addElement('advcheckbox', 'reset_questionnaire_attempts',
+    $mform->addElement('advcheckbox', 'reset_questionnaire',
                     get_string('removeallquestionnaireattempts', 'questionnaire'));
 }
 
@@ -778,7 +782,7 @@ function questionnaire_reset_course_form_definition($mform) {
  * @return array the defaults.
  */
 function questionnaire_reset_course_form_defaults($course) {
-    return array('reset_questionnaire_attempts' => 1);
+    return array('reset_questionnaire' => 1);
 }
 
 /**
@@ -797,41 +801,40 @@ function questionnaire_reset_userdata($data) {
     $componentstr = get_string('modulenameplural', 'questionnaire');
     $status = array();
 
-    $surveys = questionnaire_get_survey_list($data->courseid, $type='');
+    if (!empty($data->reset_questionnaire)) {
+        $surveys = questionnaire_get_survey_list($data->courseid, $type='');
 
-    // Delete responses.
-    foreach ($surveys as $survey) {
-        // Get all responses for this questionnaire.
-        $sql = "SELECT R.id, R.survey_id, R.submitted, R.username
-             FROM {questionnaire_response} R
-             WHERE R.survey_id = ?
-             ORDER BY R.id";
-        $resps = $DB->get_records_sql($sql, array($survey->id));
-        if (!empty($resps)) {
-            foreach ($resps as $response) {
-                questionnaire_delete_response($response->id);
+        // Delete responses.
+        foreach ($surveys as $survey) {
+            // Get all responses for this questionnaire.
+            $sql = "SELECT R.id, R.survey_id, R.submitted, R.username
+                 FROM {questionnaire_response} R
+                 WHERE R.survey_id = ?
+                 ORDER BY R.id";
+            $resps = $DB->get_records_sql($sql, array($survey->id));
+            if (!empty($resps)) {
+                foreach ($resps as $response) {
+                    questionnaire_delete_response($response->id);
+                }
             }
-            $status[] = array(
-                            'component' => $componentstr,
-                            'item' => $survey->qname.' : '.get_string('deletedallresp', 'questionnaire'),
-                            'error' => false);
-        } else {
-            $status[] = array(
-                            'component' => $componentstr,
-                            'item' => $survey->qname.' : '.get_string('noresponses', 'questionnaire'),
-                            'error' => false);
+            // Remove this questionnaire's grades (and feedback) from gradebook (if any).
+            $select = "itemmodule = 'questionnaire' AND iteminstance = ".$survey->qid;
+            $fields = 'id';
+            if ($itemid = $DB->get_record_select('grade_items', $select, null, $fields)) {
+                $itemid = $itemid->id;
+                $DB->delete_records_select('grade_grades', 'itemid = '.$itemid);
+
+            }
         }
-        // Remove this questionnaire's grades (and feedback) from gradebook (if any).
-        $select = "itemmodule = 'questionnaire' AND iteminstance = ".$survey->qid;
-        $fields = 'id';
-        if ($itemid = $DB->get_record_select('grade_items', $select, null, $fields)) {
-            $itemid = $itemid->id;
-            $DB->delete_records_select('grade_grades', 'itemid = '.$itemid);
-            $status[] = array(
-                            'component' => $componentstr,
-                            'item' => $survey->qname.' : '.get_string('gradesdeleted', 'questionnaire'),
-                            'error' => false);
-        }
+        $status[] = array(
+                        'component' => $componentstr,
+                        'item' => get_string('deletedallresp', 'questionnaire'),
+                        'error' => false);
+
+        $status[] = array(
+                        'component' => $componentstr,
+                        'item' => get_string('gradesdeleted', 'questionnaire'),
+                        'error' => false);
     }
     return $status;
 }

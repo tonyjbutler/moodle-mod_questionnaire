@@ -63,7 +63,7 @@ require_course_login($course, true, $cm);
 $questionnaire = new questionnaire(0, $questionnaire, $course, $cm);
 
 // If you can't view the questionnaire, or can't view a specified response, error out.
-$context = get_context_instance(CONTEXT_MODULE, $cm->id);
+$context = context_module::instance($cm->id);
 if (!has_capability('mod/questionnaire:readallresponseanytime', $context) &&
   !($questionnaire->capabilities->view && $questionnaire->can_view_response($rid))) {
     // Should never happen, unless called directly by a snoop...
@@ -613,11 +613,11 @@ switch ($action) {
         $SESSION->questionnaire->currentgroupid = $currentgroupid;
         if (is_array($questionnairegroups) && $groupmode > 0 && $groupscount > 1 - $questionnaire->canviewallgroups) {
             require_once($CFG->dirroot.'/mod/questionnaire/choose_group_form.php');
-            $choose_group_form = new questionnaire_choose_group_form();
-            $choose_group_form->set_questionnairedata(array('groups'=>$questionnairegroups,
+            $choosegroupform = new questionnaire_choose_group_form();
+            $choosegroupform->set_questionnairedata(array('groups'=>$questionnairegroups,
                  'currentgroupid'=>$currentgroupid, 'groupmode'=>$groupmode, 'canviewallgroups'=>$questionnaire->canviewallgroups));
-            $choose_group_form->set_form_elements();
-            $choose_group_form->display();
+            $choosegroupform->set_form_elements();
+            $choosegroupform->display();
         } else {
             echo ('<br />');
         }

@@ -65,12 +65,12 @@ $url = new moodle_url('/mod/questionnaire/show_nonrespondents.php', array('id'=>
 
 $PAGE->set_url($url);
 
-if (!$context = get_context_instance(CONTEXT_MODULE, $cm->id)) {
+if (!$context = context_module::instance($cm->id)) {
         print_error('badcontext');
 }
 
 // We need the coursecontext to allow sending of mass mails.
-if (!$coursecontext = get_context_instance(CONTEXT_COURSE, $course->id)) {
+if (!$coursecontext = context_course::instance($course->id)) {
         print_error('badcontext');
 }
 
@@ -86,7 +86,7 @@ if ($action == 'sendmessage') {
 
     $shortname = format_string($course->shortname,
                             true,
-                            array('context' => get_context_instance(CONTEXT_COURSE, $course->id)));
+                            array('context' => context_course::instance($course->id)));
     $strquestionnaires = get_string("modulenameplural", "questionnaire");
 
     $htmlmessage = "<body id=\"email\">";
@@ -160,10 +160,11 @@ $tablecolumns = array('userpic', 'fullname');
 $extrafields = get_extra_user_fields($context);
 $tableheaders = array(get_string('userpic'), get_string('fullnameuser'));
 
-foreach ($extrafields as $field) {
-    $tablecolumns[] = $field;
-    $tableheaders[] = get_user_field_name($field);
+if (in_array('email', $extrafields) || has_capability('moodle/course:viewhiddenuserfields', $context)) {
+    $tablecolumns[] = 'email';
+    $tableheaders[] = get_string('email');
 }
+
 if (!isset($hiddenfields['city'])) {
     $tablecolumns[] = 'city';
     $tableheaders[] = get_string('city');
@@ -272,19 +273,17 @@ if (!$students) {
         foreach ($students as $student) {
             $user = $DB->get_record('user', array('id'=>$student));
             // Userpicture and link to the profilepage.
-            $profile_url = $CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id;
-            $profilelink = '<strong><a href="'.$profile_url.'">'.fullname($user).'</a></strong>';
+            $profileurl = $CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id;
+            $profilelink = '<strong><a href="'.$profileurl.'">'.fullname($user).'</a></strong>';
             $data = array ($OUTPUT->user_picture($user, array('courseid'=>$course->id)), $profilelink);
-            if ($user->maildisplay == 1 or ($user->maildisplay == 2 and ($course->id != SITEID) and !isguestuser()) or
-                            has_capability('moodle/course:viewhiddenuserfields', $context) or
-                            in_array('email', $extrafields)) {
+            if (in_array('email', $tablecolumns)) {
                 $data[] = $user->email;
             }
             if (!isset($hiddenfields['city'])) {
                 $data[] = $user->city;
             }
             if (!isset($hiddenfields['country'])) {
-                $data[] = $countries[$user->country];
+                $data[] = (!empty($user->country)) ? $countries[$user->country] : '';
             }
             if ($user->lastaccess) {
                 $lastaccess = format_time(time() - $user->lastaccess, $datestring);
