@@ -1340,7 +1340,8 @@ class questionnaire_question {
         if ($this->precise == 3) { // Osgood's semantic differential.
             $osgood = true;
         }
-        echo '<table border="0" cellspacing="1" cellpadding="0">';
+        // The 0.1% right margin is needed to avoid the horizontal scrollbar in Chrome!
+        echo '<table style="width:99.9%">';
         echo '<tbody>';
         echo '<tr>';
         if ($osgood) {
