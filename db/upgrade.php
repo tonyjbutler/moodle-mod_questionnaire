@@ -387,6 +387,27 @@ function xmldb_questionnaire_upgrade($oldversion=0) {
             $dbman->add_field($table, $field);
         }
 
+        // Replace the = separator with :: separator in quest_choice content.
+        require_once($CFG->dirroot.'/mod/questionnaire/locallib.php');
+        $choices = $DB->get_records('questionnaire_quest_choice', $conditions=null);
+        $total = count($choices);
+        if ($total > 0) {
+            $pbar = new progress_bar('convertchoicevalues', 500, true);
+            $i=1;
+            foreach ($choices as $choice) {
+                if ($choice->value == null || $choice->value == 'NULL') {
+                    $content = questionnaire_choice_values($choice->content);
+                    if ($pos = strpos($content->text, '=')) {
+                        $newcontent = str_replace('=', '::', $content->text);
+                        $choice->content = $newcontent;
+                        $DB->update_record('questionnaire_quest_choice', $choice);
+                    }
+                }
+                $pbar->update($i, $total,"Convert questionnaire choice value separator - $i/$total.");
+                $i++;
+            }
+        }
+
         // Questionnaire savepoint reached.
         upgrade_mod_savepoint(true, 2013062501, 'questionnaire');
     }
