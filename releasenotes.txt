@@ -1,5 +1,25 @@
 Release Notes:
 
+Version 2.5.6 - 2013100500
+- Added autonumbering option for questions and pages in questionnaire settings. This may be especially
+useful for "conditional branching" questionnaires, in order to avoid confusing the student with 
+non-sequential questions or pages numbering!
+- Changed Description field label from Summary to Description in Edit settings form (after Quiz).
+- Added display of Description/Intro text on View page.
+- Minor changes to CSS and report display for better display in bootstrap-based themes. This may need
+further refining in future version 2.6.
+- Added "return to course" button to advanced settings form.
+- Modified (simplified) the viewallresponses capability setting.
+ 
+Version 2.5.5 - 2013093001
+- All navigation links in the tabs area have been duplicated in the Questionnaire administration block,
+so that complete removal of the tabs navigation system will be possible in further versions (2.6?).
+- When groups (separate or visible) are enabled for a questionnaire instance, it is possible to select
+which group to view responses from, in a simplified interface.
+The choose_group_form.php script is no longer needed and has been removed from the questionnaire files.
+The groups selection system has been made compliant with other moodle core modules, and the "members of all groups"
+and the "members of no group" options are no longer available.
+
 Version 2.5.5 - 2013080901
 - CONTRIB 3525 Added "conditional branching" feature to Questionnaire.
 - Modified the Preview display page to make it display/hide child questions of Conditional
@@ -13,7 +33,7 @@ switching from Required to Not required response and question deletion confirmat
 - Moved all Javascript scripts to questionnaire/module.js
 - In Radio buttons and Rate questions, the separator between "short label" and "options text"
 has been replaced from the equal sign (=) to two consecutive colons (::).
-- Plus a number of small fixes here and there.  
+An automatic replacement for existing questions has been added to the upgrade.php script.
 
 Version 2.5.4 Build - 2013062401
 - CONTRIB-823 Add confirmation for deleting a question.

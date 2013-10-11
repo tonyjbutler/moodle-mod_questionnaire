@@ -236,7 +236,7 @@ class questionnaire_question {
         global $DB;
         $val = optional_param('q'.$this->id, '', PARAM_CLEAN);
         // Only insert if non-empty content.
-        if ($this->type_id == 10) { // Numeric.
+        if ($this->type_id == QUESNUMERIC) {
             $val = preg_replace("/[^0-9.\-]*(-?[0-9]*\.?[0-9]*).*/", '\1', $val);
         }
 
@@ -367,7 +367,7 @@ class questionnaire_question {
     private function insert_response_rank($rid) {
         global $DB;
         $val = optional_param('q'.$this->id, null, PARAM_CLEAN);
-        if ($this->type_id == 8) { // Rank.
+        if ($this->type_id == QUESRATE) {
             $resid = false;
             foreach ($this->choices as $cid => $choice) {
                 $other = optional_param('q'.$this->id.'_'.$cid, null, PARAM_CLEAN);
@@ -543,7 +543,7 @@ class questionnaire_question {
             $ridstr = ' AND response_id = '.$rids.' ';
         }
 
-        if ($this->type_id  == 8) { // Rank.
+        if ($this->type_id  == QUESRATE) {
             // JR there can't be an !other field in rating questions ???
             $rankvalue = array();
             $select = 'question_id='.$this->id.' AND content NOT LIKE \'!other%\' ORDER BY id ASC';
@@ -686,7 +686,7 @@ class questionnaire_question {
                     $this->userid[$textidx] = !empty($this->counts[$textidx]) ? ($this->counts[$textidx] + 1) : 1;
                 }
             }
-            $isnumeric = $this->type_id == 10;
+            $isnumeric = $this->type_id == QUESNUMERIC;
             if ($isnumeric) {
                 $this->mkreslistnumeric(count($rids), $this->precise);
             } else {
@@ -844,20 +844,32 @@ class questionnaire_question {
     }
 
     public function questionstart_survey_display($qnum, $formdata='') {
-        global $OUTPUT, $SESSION;
+        global $OUTPUT, $SESSION, $questionnaire, $PAGE;
         $currenttab = $SESSION->questionnaire->current_tab;
+        $pagetype = $PAGE->pagetype;
         $skippedquestion = false;
         $skippedclass = '';
+        $autonum = $questionnaire->autonum;
+        // If no questions autonumbering.
+        $nonumbering = false;
+        if ($autonum != 1 && $autonum != 3) {
+            $qnum = '';
+            $nonumbering = true;
+        }
         // If we are on report page and this questionnaire has dependquestions and this question was skipped.
-        if ( $currenttab != 'myvall' && $currenttab != 'preview' && $currenttab != 'view'
+        if ( ($pagetype ==  'mod-questionnaire-myreport' || $pagetype ==  'mod-questionnaire-report')
+                        && $nonumbering == false
                         && $this->dependquestion != 0 && !array_key_exists('q'.$this->id, $formdata)) {
             $skippedquestion = true;
             $skippedclass = ' unselected';
             $qnum = '<span class="'.$skippedclass.'">('.$qnum.')</span>';
         }
         // In preview mode, hide children questions that have not been answered.
+        // In report mode, If questionnaire is set to no numbering,
+        // also hide answers to questions that have not been answered.
         $displayclass = 'qn-container';
-        if ($currenttab == 'preview') {
+        if ($pagetype == 'mod-questionnaire-preview' || ($nonumbering
+                        && ($currenttab == 'mybyresponse' || $currenttab == 'individualresp'))) {
             $parent = questionnaire_get_parent ($this);
             if ($parent) {
                 $dependquestion = $parent[$this->id]['qdependquestion'];
@@ -907,11 +919,12 @@ class questionnaire_question {
                                 'alt' => get_string('required', 'questionnaire'),
                                 'src' => $OUTPUT->pix_url('req')));
             }
-            echo html_writer::tag('h2', $qnum.$required, array('class' => 'qn-number'));
+            echo html_writer::tag('h2', $qnum, array('class' => 'qn-number'));
             echo html_writer::start_tag('div', array('class' => 'accesshide'));
             echo get_string('required', 'questionnaire');
             echo html_writer::end_tag('div');
             echo html_writer::end_tag('div');
+            echo $required;
         }
         echo html_writer::end_tag('legend');
         echo html_writer::start_tag('div', array('class' => 'qn-content'));
@@ -939,7 +952,7 @@ class questionnaire_question {
     }
 
     private function response_check_required ($data) { // JR check all question types
-        if ($this->type_id == 8) { // Rate is a special case.
+        if ($this->type_id == QUESRATE) { // Rate is a special case.
             foreach ($this->choices as $cid => $choice) {
                 $str = 'q'."{$this->id}_$cid";
                 if (isset($data->$str)) {
@@ -1026,7 +1039,7 @@ class questionnaire_question {
     }
 
     private function text_survey_display($data) { // Text Box.
-        echo '<input type="text" size="'.$this->length.'" name="q'.$this->id.'"'.
+        echo '<input onkeypress="return event.keyCode != 13;" type="text" size="'.$this->length.'" name="q'.$this->id.'"'.
              ($this->precise > 0 ? ' maxlength="'.$this->precise.'"' : '').' value="'.
              (isset($data->{'q'.$this->id}) ? stripslashes($data->{'q'.$this->id}) : '').
              '" id="' . $this->type . $this->id . '" />';
@@ -1340,15 +1353,26 @@ class questionnaire_question {
         if ($this->precise == 3) { // Osgood's semantic differential.
             $osgood = true;
         }
+        // Check if rate question has one line only to display full width columns of choices.
+        $nocontent = false;
+        foreach ($this->choices as $cid => $choice) {
+            if ($choice->content == '') {
+                $nocontent = true;
+                break;
+            }
+        }
         // The 0.1% right margin is needed to avoid the horizontal scrollbar in Chrome!
         echo '<table style="width:99.9%">';
         echo '<tbody>';
         echo '<tr>';
         if ($osgood) {
-            echo '<td style="width: 19%;"></td>';
+            $width = '19%';
+        } else if ($nocontent) {
+            $width = '0%';
         } else {
-            echo '<td style="width: 29%"></td>';
+            $width = '29%';
         }
+        echo '<td style="width: '.$width.'"></td>';
 
         if ($this->precise == 1) {
             $na = get_string('notapplicable', 'questionnaire');
@@ -1384,6 +1408,9 @@ class questionnaire_question {
         if ($osgood) {
             $colwidth = (60 / $this->length).'%';
             $textalign = 'right';
+        } else if ($nocontent) {
+            $colwidth = (100 / $this->length).'%';
+            $textalign = 'left';
         } else {
             $colwidth = (70 / $this->length).'%';
             $textalign = 'left';
@@ -1483,7 +1510,7 @@ class questionnaire_question {
         }
         echo $datemess;
         echo html_writer::start_tag('div', array('class' => 'qn-date'));
-        echo '<input type="text" size="12" name="q'.$this->id.'" maxlength="10" value="'.
+        echo '<input onkeypress="return event.keyCode != 13;" type="text" size="12" name="q'.$this->id.'" maxlength="10" value="'.
              (isset($data->{'q'.$this->id}) ? $data->{'q'.$this->id} : '').'" />';
         echo html_writer::end_tag('div');
     }
@@ -1522,7 +1549,7 @@ class questionnaire_question {
             }
         }
 
-        echo '<input type="text" size="'.$this->length.'" name="q'.$this->id.'" maxlength="'.$this->length.
+        echo '<input onkeypress="return event.keyCode != 13;" type="text" size="'.$this->length.'" name="q'.$this->id.'" maxlength="'.$this->length.
              '" value="'.(isset($data->{'q'.$this->id}) ? $data->{'q'.$this->id} : '').
             '" id="' . $this->type . $this->id . '" />';
     }
@@ -1852,7 +1879,7 @@ class questionnaire_question {
         $table->align = array();
         $table->head = array();
         $table->wrap = array();
-        $table->size = array_merge($table->size, array('*', '50%', '7%'));
+        $table->size = array_merge($table->size, array('50%', '40%', '10%'));
         $table->align = array_merge($table->align, array('left', 'left', 'right'));
         $table->wrap = array_merge($table->wrap, array('', 'nowrap', ''));
         $table->head = array_merge($table->head, array(get_string('response', 'questionnaire'),
@@ -1884,7 +1911,7 @@ class questionnaire_question {
                 }
                 if ($num) {
                     $out = '&nbsp;<img alt="'.$alt.'" src="'.$imageurl.'hbar_l.gif" />'.
-                               '<img style="height:9px; width:'.($percent*4).'px;" alt="'.$alt.'" src="'.
+                               '<img style="height:9px; width:'.($percent*1.4).'px;" alt="'.$alt.'" src="'.
                                $imageurl.'hbar.gif" />'.'<img alt="'.$alt.'" src="'.$imageurl.'hbar_r.gif" />'.
                                sprintf('&nbsp;%.'.$precision.'f%%', $percent);
                 } else {
@@ -1909,7 +1936,7 @@ class questionnaire_question {
                 }
 
                 $out = '&nbsp;<img alt="'.$alt.'" src="'.$imageurl.'thbar_l.gif" />'.
-                                '<img style="height:9px;  width:'.($percent*4).'px;" alt="'.$alt.'" src="'.
+                                '<img style="height:9px;  width:'.($percent*1.4).'px;" alt="'.$alt.'" src="'.
                                 $imageurl.'thbar.gif" />'.'<img alt="'.$alt.'" src="'.$imageurl.'thbar_r.gif" />'.
                                 sprintf('&nbsp;%.'.$precision.'f%%', $percent);
                 $table->data[] = 'hr';

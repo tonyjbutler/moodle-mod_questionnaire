@@ -81,6 +81,9 @@ echo $OUTPUT->heading(format_text($questionnaire->name));
 
 // Print the main part of the page.
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+if ($questionnaire->intro) {
+    echo $questionnaire->intro;
+}
 
 if (!$questionnaire->is_active()) {
     echo '<div class="message">'
@@ -173,18 +176,33 @@ if (isset($SESSION->questionnaire->numselectedresps)) {
 } else {
     $numselectedresps = $numresp;
 }
-if ( ($questionnaire->capabilities->readallresponseanytime && $numresp > 0 && $owner && $numselectedresps > 0) ||
-        $questionnaire->capabilities->readallresponses && ($numresp > 0) &&
-           ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_ALWAYS ||
-            ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED
-                && $questionnaire->is_closed()) ||
-            ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED
-                && $usernumresp > 0)) &&
-           $questionnaire->is_survey_owner()) {
+
+// If questionnaire is set to separate groups, prevent user who is not member of any group
+// to view All responses.
+$canviewgroups = true;
+$groupmode = groups_get_activity_groupmode($cm, $course);
+if ($groupmode == 1) {
+    $canviewgroups = groups_has_membership($cm, $USER->id);;
+}
+
+$canviewallgroups = has_capability('moodle/site:accessallgroups', $context);
+    if (( (
+            // Teacher or non-editing teacher (if can view all groups).
+            $canviewallgroups ||
+            // Non-editing teacher (with canviewallgroups capability removed), if member of a group.
+            ($canviewgroups && $questionnaire->capabilities->readallresponseanytime))
+            && $numresp > 0 && $owner && $numselectedresps > 0) ||
+            $questionnaire->capabilities->readallresponses && ($numresp > 0) && $canviewgroups &&
+            ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_ALWAYS ||
+                    ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED
+                            && $questionnaire->is_closed()) ||
+                    ($questionnaire->resp_view == QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED
+                            && $usernumresp > 0)) &&
+            $questionnaire->is_survey_owner()) {
     echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
     $argstr = 'instance='.$questionnaire->id;
     echo '<a href="'.$CFG->wwwroot.htmlspecialchars('/mod/questionnaire/report.php?'.
-            $argstr).'">'.get_string('viewresponses', 'questionnaire', $numresp).'</a>';
+            $argstr).'">'.get_string('viewallresponses', 'questionnaire').'</a>';
     echo $OUTPUT->box_end();
 }
 

@@ -67,10 +67,15 @@ $questionnairerealms = array ('private' => get_string('private', 'questionnaire'
 
 global $questionnaireresponseviewers;
 $questionnaireresponseviewers =
-    array ( QUESTIONNAIRE_STUDENTVIEWRESPONSES_NEVER => get_string('responseviewstudentsnever', 'questionnaire'),
-            QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED => get_string('responseviewstudentswhenanswered', 'questionnaire'),
+    array ( QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENANSWERED => get_string('responseviewstudentswhenanswered', 'questionnaire'),
             QUESTIONNAIRE_STUDENTVIEWRESPONSES_WHENCLOSED => get_string('responseviewstudentswhenclosed', 'questionnaire'),
             QUESTIONNAIRE_STUDENTVIEWRESPONSES_ALWAYS => get_string('responseviewstudentsalways', 'questionnaire'));
+
+global $autonumbering;
+$autonumbering = array (0 => get_string('autonumberno', 'questionnaire'),
+        1 => get_string('autonumberquestions', 'questionnaire'),
+        2 => get_string('autonumberpages', 'questionnaire'),
+        3 => get_string('autonumberpagesandquestions', 'questionnaire'));
 
 function questionnaire_check_date ($thisdate, $insert=false) {
     $dateformat = get_string('strfdate', 'questionnaire');
