@@ -450,7 +450,7 @@ class questionnaire_question {
         } else if (is_int($rids)) {
             $ridstr = ' AND response_id = '.$rids.' ';
         }
-        $sql = 'SELECT T.id, T.response, R.submitted AS submitted, R.username, U.username AS username, U.id AS user, '.
+        $sql = 'SELECT T.id, T.response, R.submitted AS submitted, R.username, U.username AS username, '.
                 'U.lastname, U.firstname, R.survey_id, R.id AS rid '.
                 'FROM {questionnaire_'.$this->response_table.'} T, '.
                 '{questionnaire_response} R, '.
@@ -1469,14 +1469,7 @@ class questionnaire_question {
                     }
                 }
                 if ($na) {
-                    if ( (in_array($na, $data->{'q'.$this->id})) ||
-                            (isset($data->$str) && $data->$str == -1) ||
-                            $this->required == 'n' && !$blankquestionnaire) {
-                        // Automatically check N/A buttons if rate question is not required except if we are printing questionnaire.
-                        $checked = ' checked="checked"';
-                    } else {
-                        $checked = '';
-                    }
+                    $checked = '';
                     echo '<td style="width:auto; text-align:center" class="'.$bg.'">';
                     echo '<input name="'.$str.'" type="radio" value="'.$na.'"'.$checked.' /></td>';
                 }
